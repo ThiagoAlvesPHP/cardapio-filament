@@ -3,10 +3,13 @@
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
+use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Support\Assets\Js;
+use Filament\Support\Facades\FilamentAsset;
 
 class Settings extends Page
 {
@@ -23,6 +26,20 @@ class Settings extends Page
     //     return auth()->user()->canManageSettings();
     // }
 
+    protected function getHeaderActions(): array
+    {
+        FilamentAsset::register([
+            Js::make('custom-script', 'https://cdn.tailwindcss.com'),
+        ]);
+
+        $panel = Filament::getPanel();
+        $primaryColor = $panel->getColors()['primary'];
+
+        view()->share('primaryColor', $primaryColor);
+
+        return [];
+    }
+
     public static function getNavigationLabel(): string
     {
         return 'Configurações';
@@ -33,15 +50,22 @@ class Settings extends Page
         return 'Configurações';
     }
 
-    public function mount(Setting $post): void
+    public function mount(Setting $settings): void
     {
-        $this->form->fill($post->toArray());
+        $this->form->fill($settings->first()->toArray());
     }
 
     public function form(Form $form): Form
     {
         return $form
             ->schema([
+                Forms\Components\Grid::make()->schema([
+                    Forms\Components\FileUpload::make('logo')
+                        ->label('Logo'),
+                    Forms\Components\FileUpload::make('favicon')
+                        ->label('Favicon'),
+                ])->columns(2),
+
                 Forms\Components\TextInput::make('name')
                     ->label('Nome da empresa')
                     ->columnSpanFull()
